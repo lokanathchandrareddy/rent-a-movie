@@ -1,4 +1,4 @@
-import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
+ import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 
 // PWA Config
 const title = "MovieBox";
@@ -27,6 +27,7 @@ export default defineNuxtConfig({
   },
 
   modules: [
+    '@pinia/nuxt',
     async (options, nuxt) => {
       nuxt.hooks.hook("vite:extendConfig", (config) => {
         config.plugins ||= [];
