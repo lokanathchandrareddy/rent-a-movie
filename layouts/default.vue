@@ -1,12 +1,13 @@
 <template>
   <VApp>
-    <VAppBar v-if="currentRoute!=='/'">
+    <!-- AppBar only appears when we're not on the home route (/) -->
+    <VAppBar v-if="currentRoute !== '/'">
       <VAppBarNavIcon></VAppBarNavIcon>
       <VToolbarTitle>Movie Rental</VToolbarTitle>
       <VSpacer></VSpacer>
 
-      <!-- Show Navigatable buttons based on the route -->
-      <VBtn v-if="currentRoute === '/return'" link to="/movies" @click="openCart(true)">
+      <!-- Show navigation buttons based on the route -->
+      <VBtn v-if="currentRoute === '/return'" link to="/movies">
         Movies
       </VBtn>
       <VBtn v-else link to="/return">
@@ -16,21 +17,16 @@
       <v-btn @click="logout">Logout</v-btn>
     </div>
     </VAppBar>
-    <v-main v-if="currentRoute='/'">
-      <NuxtPage />
-    </v-main>
-    <VMain v-else>
-      <VContainer fluid>
-        <VRow>
-          <VCol cols="12">
+
+    <!-- Main content with proper column span adjustments -->
+    <VMain v-if="currentRoute !== '/'">
             <NuxtPage />
-          </VCol>
-          <VCol cols="3">
-            <!-- Sidebar is always visible here -->
             <Sidebar />
-          </VCol>
-        </VRow>
-      </VContainer>
+    </VMain>
+
+    <!-- Full page for homepage (/) without the AppBar or Sidebar -->
+    <VMain v-else>
+      <NuxtPage />
     </VMain>
   </VApp>
 </template>
@@ -66,7 +62,4 @@ const logout = async () => {
 };
 </script>
 <style scoped>
-.v-main {
-  overflow: hidden;
-}
 </style>
