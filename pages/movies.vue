@@ -23,23 +23,13 @@
 import { ref, onMounted } from 'vue';
 import { useMovieStore } from '@/stores/movieCart';
 
-const movies = ref([]);
 const cartMovieStore = useMovieStore();
 
 // lifecycle to load movies on intiial load
-onMounted(async () => {
-  try {
-    const response = await fetch('/Movies.json');
-    if (!response.ok) {
-      throw new Error('Failed to load');
-    }
-    const data = await response.json();
-    movies.value = data;
-  } catch (error) {
-    console.error('Error loading movie data:', error);
-  }
+onMounted(() => {
+  cartMovieStore.fetchMovies();
 });
-
+const movies = computed(() => cartMovieStore.movies);
 function addToMovieCart(movie) {
   if (movie.stock > 0) {
     cartMovieStore.addToCart(movie);

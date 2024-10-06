@@ -1,7 +1,7 @@
 <template>
     <VNavigationDrawer location="end" permanent>
         <VToolbar flat>
-            <VToolbarTitle>{{ isReturnPage === '' ? 'Return Movies' : 'Your Cart' }}</VToolbarTitle>
+            <VToolbarTitle>{{ isReturnPage ? 'Return Movies' : 'Your Cart' }}</VToolbarTitle>
         </VToolbar>
         <VDivider></VDivider>
         <VList>
@@ -9,7 +9,7 @@
                 <VListItemTitle>
                     {{ item.title }}
                 </VListItemTitle>
-                <VListItemSubtitle v-if="!isReturnMode"> {{ item.stock > 0 ? `${item.stock} in stock` : 'Out Of Stock'
+                <VListItemSubtitle v-if="!isReturnPage"> {{ item.stock > 0 ? `${item.stock} in stock` : 'Out Of Stock'
                     }}</VListItemSubtitle>
                 <template #append>
                     <VBtn flat size="x-small" @click="removeFromMovieCart(item.id)">
@@ -20,9 +20,9 @@
         </VList>
         <VDivider />
         <VListItem>
-            <VListItemTitle v-if="!isReturnMode"> Total Cost: {{ totalCost }} </VListItemTitle>
+            <VListItemTitle v-if="!isReturnPage"> Total Cost: {{ totalCost }} </VListItemTitle>
         </VListItem>
-        <VBtn color="primary" @click="checkoutMovies">{{ isReturnPage ? 'Return Movies' : 'Checkout' }}</VBtn>
+        <VBtn color="primary" @click="checkoutMovies">{{ isReturnPage ? 'Return Cart' : 'Checkout' }}</VBtn>
     </VNavigationDrawer>
 </template>
 
@@ -34,7 +34,7 @@ import { useMovieStore } from '@/stores/movieCart'
 const route = useRoute();
 const movieCartStore = useMovieStore();
 
-const isReturnPage = computed(() => route.fullPath === '/return');
+const isReturnPage = computed(() => route.path === '/return');
 const movieCart = computed(() => movieCartStore.movieItems);
 const totalCost = computed(() => movieCartStore.totalCost);
 
@@ -42,19 +42,18 @@ function removeFromMovieCart(id) {
     movieCartStore.removeFromCart(id);
 }
 
-function checkoutMovies() {
-    if (isReturnPage.value) {
-        // for return
-        movieCartStore.returnMovies();
-        movieCartStore.clearCart();
-        console.log("return completed");
-        alert('Movies returned successfully.');
-    } else {
-        // for checkout
-        movieCartStore.checkout();
-        movieCartStore.clearCart();
-        console.log("check out completed");
-        alert('Checkout successful.');
-    }
-}
+const checkoutMovies = async () => {
+  const user = useSupabaseUser();
+  if (user.value) {
+  if (isReturnPage.value) { 
+    await movieCartStore.returnMovies(user.value.id);
+    alert('Movies returned successfully.');
+  }
+  else {
+    await movieCartStore.checkout(user.value.id);
+    alert('Movie Checkout successful.');
+  }
+    
+  }
+};
 </script>
