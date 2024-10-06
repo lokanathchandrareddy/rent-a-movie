@@ -12,6 +12,9 @@
       <VBtn v-else link to="/return">
         Return Movies
       </VBtn>
+      <div v-if="user">
+      <v-btn @click="logout">Logout</v-btn>
+    </div>
     </VAppBar>
     <v-main v-if="currentRoute='/'">
       <NuxtPage />
@@ -38,8 +41,15 @@ import Sidebar from '@/components/Sidebar.vue';
 import { useMovieStore } from '@/stores/movieCart';
 
 const route = useRoute();
+const router = useRouter();
 const movieCartStore = useMovieStore();
+const supabase = useSupabaseClient();
 
+const user = ref(null);
+
+onMounted(() => {
+  user.value = supabase.auth.getUser();
+});
 const currentRoute = computed(() => route.fullPath);
 
 const showCart = ref(false);
@@ -49,9 +59,11 @@ function openCart(isReturnMode) {
   showCart.value = true
 }
 
-function toggleCart() {
-  showCart.value = !showCart.value;
-}
+const logout = async () => {
+  await supabase.auth.signOut();
+  user.value = null;
+  router.push('/');
+};
 </script>
 <style scoped>
 .v-main {

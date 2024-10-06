@@ -25,9 +25,9 @@ export default defineNuxtConfig({
       },
     },
   },
-
   modules: [
     '@pinia/nuxt',
+    '@nuxtjs/supabase',
     async (options, nuxt) => {
       nuxt.hooks.hook("vite:extendConfig", (config) => {
         config.plugins ||= [];
@@ -35,6 +35,14 @@ export default defineNuxtConfig({
       });
     },
   ],
+  supabase: { redirect: false },
+  runtimeConfig: {
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_KEY,
+    },
+  },
+  
 
   app: {
     head: {
