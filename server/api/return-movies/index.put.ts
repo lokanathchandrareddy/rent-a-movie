@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event); // Parse the request body
   const { movies } = body; 
 
-  console.log('Movies passed', movies);
+  // console.log('Movies passed', movies);
 
   const supabase = await serverSupabaseClient(event);
 

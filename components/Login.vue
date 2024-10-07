@@ -1,22 +1,23 @@
 <template>
-  <VCard max-width="400" class="mx-auto my-12 py-8 px-4 elevation-3">
-    <VCardTitle class="text-h5 align-center">Login</VCardTitle>
+  <VCard max-width="400" class="mx-auto my-4 py-4 px-2" elevation="3">
+    <VCardTitle class="text-h5 text-center">Login</VCardTitle>
 
     <VCardText>
       <VForm @submit.prevent="login">
-        <VTextField v-model="email" label="Email" type="email" outlined dense prepend-inner-icon="mdi-email"
-          :rules="[rules.required, rules.email]" />
+        <VTextField v-model="email" label="Email" type="email" variant="outlined" density="compact"
+          prepend-inner-icon="mdi-email" :rules="[rules.required, rules.email]" />
 
-        <VTextField v-model="password" label="Password" type="password" outlined dense prepend-inner-icon="mdi-lock"
-          :rules="[rules.required]" />
+        <VTextField v-model="password" label="Password" type="password" variant="outlined" density="compact"
+          prepend-inner-icon="mdi-lock" :rules="[rules.required]" />
 
-        <VBtn type="submit" color="primary" block large class="mt-4">
+        <VBtn type="submit" color="primary" size="large" class="mt-4 w-100">
           Login
         </VBtn>
       </VForm>
     </VCardText>
   </VCard>
 </template>
+
 
 <script setup>
 import { ref } from 'vue';

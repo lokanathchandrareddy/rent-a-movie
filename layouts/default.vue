@@ -1,59 +1,66 @@
 <template>
   <VApp>
-    <!-- AppBar only appears when we're not on the home route (/) -->
-    <VAppBar v-if="currentRoute !== '/'">
-      <VAppBarNavIcon></VAppBarNavIcon>
-      <VToolbarTitle>Movie Rental</VToolbarTitle>
-      <VSpacer></VSpacer>
-
+<!-- AppBar only appears when we're not on the home route (/) -->
+    <VAppBar v-if="currentRoute !== '/'" color="primary" dark elevate-on-scroll>
+      <VToolbarTitle class="font-weight-bold">
+        Rent A Movie
+      </VToolbarTitle>
+      <VSpacer />
       <!-- Show navigation buttons based on the route -->
-      <VBtn v-if="currentRoute === '/return'" link to="/movies">
+      <VBtn v-if="currentRoute === '/return'" to="/movies" text class="mx-2">
         Movies
       </VBtn>
-      <VBtn v-else link to="/return">
+      <VBtn v-else to="/return" text class="mx-2">
         Return Movies
       </VBtn>
+
+      <!-- User Avatar and Logout -->
       <div v-if="user">
-      <v-btn @click="logout">Logout</v-btn>
-    </div>
+        <VMenu offset-y>
+          <template #activator="{ props }">
+            <VAvatar v-bind="props" color="secondary" class="mx-2">
+              {{ userInitials }}
+            </VAvatar>
+          </template>
+          <VList width="200">
+            <VListItem prepend-icon="mdi-logout" @click="logout">
+              <VListItemTitle>Logout</VListItemTitle>
+            </VListItem>
+          </VList>
+        </VMenu>
+      </div>
     </VAppBar>
 
-    <!-- Main content with proper column span adjustments -->
-    <VMain v-if="currentRoute !== '/'">
-            <NuxtPage />
-            <Sidebar />
-    </VMain>
-
-    <!-- Full page for homepage (/) without the AppBar or Sidebar -->
-    <VMain v-else>
+    <!-- Main Content -->
+    <VMain>
       <NuxtPage />
+      <!-- Include Sidebar if needed -->
+      <Sidebar v-if="currentRoute !== '/'" />
     </VMain>
   </VApp>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import Sidebar from '@/components/Sidebar.vue';
-import { useMovieStore } from '@/stores/movieCart';
 
 const route = useRoute();
 const router = useRouter();
-const movieCartStore = useMovieStore();
+
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 
-const user = ref(null);
-
-onMounted(() => {
-  user.value = supabase.auth.getUser();
-});
 const currentRoute = computed(() => route.fullPath);
 
-const showCart = ref(false);
-
-function openCart(isReturnMode) {
-  movieCartStore.setReturnMode(isReturnMode);
-  showCart.value = true
-}
+const userInitials = computed(() => { // for avatar
+  if (user.value && user.value.email) {
+    return user.value.email
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  }
+  return '';
+});
 
 const logout = async () => {
   await supabase.auth.signOut();
@@ -61,5 +68,3 @@ const logout = async () => {
   router.push('/');
 };
 </script>
-<style scoped>
-</style>
