@@ -29,10 +29,14 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    // Remove the movie from the rented_movies table (delete the rental)
+    // update the movie from the rented_movies table add returned date)
+    // this can be useful for historical data, with no extra cost/ requests 
+    
     const { error: returnError } = await supabase
       .from("rented_movies")
-      .delete() // may be remove the delete to store it as a history.
+      .update({
+        returned_at: new Date(),  // Mark the return date
+      })
       .eq("movie_id", movie.id)
       .eq("user_id", user.id); // Make sure to delete only for the logged-in user
 

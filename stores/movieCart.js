@@ -9,6 +9,7 @@ export const useMovieStore = defineStore("movieCart", {
 
   actions: {
     async fetchMovies() {
+      //  Fetch all movies via API
       try {
         const response = await fetch('/api/movies', {
           method: 'GET', // GET request
