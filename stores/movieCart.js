@@ -9,125 +9,82 @@ export const useMovieStore = defineStore("movieCart", {
 
   actions: {
     async fetchMovies() {
-      console.log("inside fetch");
-      const supabase = useSupabaseClient();
-      const { data, error } = await supabase.from("movies").select("*"); // select * from movies to get all the data
-      if (error) {
-        console.log("error while loading movies", error.message);
-      } else {
-        console.log("data from supabase", data);
-        this.movies = data;
+      try {
+        const response = await fetch('/api/movies', {
+          method: 'GET', // GET request
+        });
+        const data = await response.json();
+        this.movies = data.body; 
+      } catch (error) {
+        console.error("Error while loading movies", error);
       }
     },
-    async fetchRentedMovies(id) {
-      // fetch rented movies per user ID
-      console.log("user.value.id", id);
-      const supabase = useSupabaseClient();
-      // const { data, error } = await supabase
-      //   .from("rented_movies")
-      //   .select("*, movies(*)")
-      //   .eq("user_id", id); // select all data and join it with movies table with key as id/userId
 
-      const { data, error } = await supabase
-        .from("rented_movies_flat")
-        .select("*")
-        .eq("user_id", id);
-      console.log("data inside", data);
-      if (error) {
-        console.log("error while loading rented movies", error.message);
-      } else {
-        this.rentedItems = data;
+    // Fetch rented movies for the user via the API,
+    // user is directly used in the Server, instead of passing from here
+    async fetchRentedMovies() {
+      try {
+        const response = await fetch('/api/return-movies', {
+          method: 'GET', // GET request
+        });
+        const data = await response.json();
+        this.rentedItems = data.body;  // Assuming response contains data in body
+      } catch (error) {
+        console.error("Error while loading rented movies", error);
       }
     },
+
     addToCart(movie) {
       this.movieItems.push(movie);
     },
+
     removeFromCart(movieId) {
       this.movieItems = this.movieItems.filter((item) => item.id !== movieId);
     },
+
     clearCart() {
       this.movieItems = [];
     },
-    async checkout(userId) {
-      const supabase = useSupabaseClient();
-      // Update state management for checkout
-      this.movieItems.forEach(async (movie) => {
-        console.log("Movie inside", movie);
-        movie.stock -= 1; // Decrease stock for each movie
-        const { error: stockErr } = await supabase
-          .from("movies")
-          .update({ stock: movie.stock })
-          .eq("id", movie.id);
-        if (stockErr) {
-          console.error("error updating the stock in movies", stockErr.message);
-          return; // return on error
-        }
-        const { error: rentalErr } = await supabase
-          .from("rented_movies")
-          .insert({
-            movie_id: movie.id,
-            user_id: userId,
-            rented_on: new Date(),
-          });
-        if (rentalErr) {
-          console.log("error while pushign to Rental Data", rentalErr.message);
+    
+    //checkout movies via API, multiple movies will be handled by server request
+    async checkout() {
+      try {
+        const response = await fetch('/api/return-movies', {
+          method: 'POST', // POST request to insert new rentals
+          body: JSON.stringify({ movies: this.movieItems }),
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Error during checkout');
         }
 
-        // TODO: later
-        //comment for now as we are not tracking quantity per user
-        // const rentedMovie = this.rentedItems.find(
-        //   (item) => item.id === movie.id
-        // );
-        // if (rentedMovie) {
-        //   rentedMovie.quantity += 1; // add quantity to rentedItems
-        // } else {
-        //   this.rentedItems.push({ ...movie, quantity: 1 });
-        // }
-      });
-      this.clearCart();
+        this.clearCart();  // Clear cart after successful checkout - add loading
+      } catch (error) {
+        console.error("Error during checkout:", error);
+      }
     },
-    async returnMovies(userId) {
-      const supabase = useSupabaseClient();
 
-      this.movieItems.forEach(async (movie) => {
-        movie.stock += 1; // Increase stock for each movie
-        const { error: stockErr } = await supabase
-          .from("movies")
-          .update({ stock: movie.stock })
-          .eq("id", movie.id);
+    // returning Movies via API, multiple movies will be handled in Server
+    async returnMovies() {
+      try {
+        const response = await fetch('/api/return-movies', {
+          method: 'PUT', // PUT request to update stock/return movies
+          body: JSON.stringify({ movies: this.movieItems }),
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-        if (stockErr) {
-          console.error(
-            "Error while updating stock during retunr",
-            stockErr.message
-          );
-          return;
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Error during return');
         }
 
-        const { error: returnErr } = await supabase
-          .from("rented_movies")
-          .delete()
-          .eq("user_id", userId)
-          .eq("movie_id", movie.id);
-
-        if (returnErr) {
-          console.error("Errol returning thwe movie", returnErr.message);
-        }
-
-        //TODO: we can assess the quantity later
-        // const rentedMovieIndex = this.rentedItems.findIndex(
-        //   (item) => item.id === movie.id
-        // );
-        // if (rentedMovieIndex !== -1) {
-        //   const rentedMovie = this.rentedItems[rentedMovieIndex];
-        //   rentedMovie.quantity -= 1; // decrease from rentedItems
-        //   if (rentedMovie.quantity <= 0) {
-        //     this.rentedItems.splice(rentedMovieIndex, 1);
-        //   }
-        // }
-      });
-      this.clearCart();
-      this.fetchRentedMovies(userId);
+        this.clearCart();  // Clear cart - could use a loading mode
+        await this.fetchRentedMovies();  //
+      } catch (error) {
+        console.error("Error during return:", error);
+      }
     },
   },
   getters: {
