@@ -1,60 +1,70 @@
 <template>
   <VApp>
-    <VAppBar v-if="currentRoute!=='/'">
-      <VAppBarNavIcon></VAppBarNavIcon>
-      <VToolbarTitle>Movie Rental</VToolbarTitle>
-      <VSpacer></VSpacer>
-
-      <!-- Show Navigatable buttons based on the route -->
-      <VBtn v-if="currentRoute === '/return'" link to="/movies" @click="openCart(true)">
+<!-- AppBar only appears when we're not on the home route (/) -->
+    <VAppBar v-if="currentRoute !== '/'" color="primary" dark elevate-on-scroll>
+      <VToolbarTitle class="font-weight-bold">
+        Rent A Movie
+      </VToolbarTitle>
+      <VSpacer />
+      <!-- Show navigation buttons based on the route -->
+      <VBtn v-if="currentRoute === '/return'" to="/movies" text class="mx-2">
         Movies
       </VBtn>
-      <VBtn v-else link to="/return">
+      <VBtn v-else to="/return" text class="mx-2">
         Return Movies
       </VBtn>
+
+      <!-- User Avatar and Logout -->
+      <div v-if="user">
+        <VMenu offset-y>
+          <template #activator="{ props }">
+            <VAvatar v-bind="props" color="secondary" class="mx-2">
+              {{ userInitials }}
+            </VAvatar>
+          </template>
+          <VList width="200">
+            <VListItem prepend-icon="mdi-logout" @click="logout">
+              <VListItemTitle>Logout</VListItemTitle>
+            </VListItem>
+          </VList>
+        </VMenu>
+      </div>
     </VAppBar>
-    <v-main v-if="currentRoute='/'">
+
+    <!-- Main Content -->
+    <VMain>
       <NuxtPage />
-    </v-main>
-    <VMain v-else>
-      <VContainer fluid>
-        <VRow>
-          <VCol cols="12">
-            <NuxtPage />
-          </VCol>
-          <VCol cols="3">
-            <!-- Sidebar is always visible here -->
-            <Sidebar />
-          </VCol>
-        </VRow>
-      </VContainer>
+      <!-- Include Sidebar if needed -->
+      <Sidebar v-if="currentRoute !== '/'" />
     </VMain>
   </VApp>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import Sidebar from '@/components/Sidebar.vue';
-import { useMovieStore } from '@/stores/movieCart';
 
 const route = useRoute();
-const movieCartStore = useMovieStore();
+const router = useRouter();
+
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 
 const currentRoute = computed(() => route.fullPath);
 
-const showCart = ref(false);
+const userInitials = computed(() => { // for avatar
+  if (user.value && user.value.email) {
+    return user.value.email
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  }
+  return '';
+});
 
-function openCart(isReturnMode) {
-  movieCartStore.setReturnMode(isReturnMode);
-  showCart.value = true
-}
-
-function toggleCart() {
-  showCart.value = !showCart.value;
-}
+const logout = async () => {
+  await supabase.auth.signOut();
+  user.value = null;
+  router.push('/');
+};
 </script>
-<style scoped>
-.v-main {
-  overflow: hidden;
-}
-</style>

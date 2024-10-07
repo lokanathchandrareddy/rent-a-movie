@@ -1,17 +1,39 @@
 <template>
   <VContainer fluid>
     <VRow>
-      <VCol v-for="movie in movies" :key="movie.title" cols="12" md="4">
-        <VCard class="ma-2 pa-2" variant="tonal">
-          <VCardTitle>{{ movie.title }}</VCardTitle>
-          <VCardSubtitle>{{ movie.genre }} - {{ movie.language }}</VCardSubtitle>
+      <VCol v-for="(movie, index) in movies" :key="movie.id" cols="12" sm="6" md="4">
+        <VCard class="elevation-2" rounded="lg" outlined>
+          <VCardTitle class="text-white" :class="index % 2 === 0 ? 'bg-primary' : 'bg-secondary'">
+            {{ movie.title }}
+          </VCardTitle>
+
           <VCardText>
-            <p><strong>Director:</strong> {{ movie.director }}</p>
-            <p><strong>Year of Release:</strong> {{ movie.year_of_release }}</p>
-            <p><strong>Price:</strong> ${{ movie.price.toFixed(2) }}</p>
+            <VRow dense>
+              <VCol cols="12">
+                <VChip class="ma-2" color="primary" text-color="white" size="large">
+                  {{ movie.genre }}
+                </VChip>
+                <VChip class="ma-2" color="secondary" text-color="white" size="large">
+                  {{ movie.language }}
+                </VChip>
+              </VCol>
+
+              <VCol cols="12">
+                <VList density="compact">
+                  <VListItem title="Director" :subtitle="movie.director" />
+                  <VListItem title="Year of Release" :subtitle="movie.year_of_release" />
+                  <VListItem v-if="!isReturnPage" title="Price" :subtitle="'$' + movie.price.toFixed(2)" />
+                  <VListItem v-if="!isReturnPage" title="Stock" :subtitle="'Only ' + movie.stock + ' left'" />
+                </VList>
+              </VCol>
+            </VRow>
           </VCardText>
+
           <VCardActions>
-            <VBtn block color="primary" @click="addToMovieCart(movie)">Add to Cart</VBtn>
+            <VSpacer />
+            <VBtn color="primary" @click="addToMovieCart(movie)" prepend-icon="mdi-cart" variant="tonal" size="small">
+              Add to Cart
+            </VBtn>
           </VCardActions>
         </VCard>
       </VCol>
@@ -19,27 +41,18 @@
   </VContainer>
 </template>
 
+
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { useMovieStore } from '@/stores/movieCart';
 
-const movies = ref([]);
 const cartMovieStore = useMovieStore();
 
 // lifecycle to load movies on intiial load
-onMounted(async () => {
-  try {
-    const response = await fetch('/Movies.json');
-    if (!response.ok) {
-      throw new Error('Failed to load');
-    }
-    const data = await response.json();
-    movies.value = data;
-  } catch (error) {
-    console.error('Error loading movie data:', error);
-  }
+onMounted(() => {
+  cartMovieStore.fetchMovies();
 });
-
+const movies = computed(() => cartMovieStore.movies);
 function addToMovieCart(movie) {
   if (movie.stock > 0) {
     cartMovieStore.addToCart(movie);
@@ -51,8 +64,4 @@ function addToMovieCart(movie) {
 }
 </script>
 
-<style scoped>
-.ma-2 {
-  margin: 16px;
-}
-</style>
+<style scoped></style>
