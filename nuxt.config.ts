@@ -8,7 +8,7 @@ const description = "Rent movies from here";
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
   // import styles
-  css: ["@/assets/main.scss"],
+  css: ["vuetify/styles",'@mdi/font/css/materialdesignicons.css'],
 
   devtools: { enabled: true },
 
